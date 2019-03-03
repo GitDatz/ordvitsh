@@ -1,0 +1,47 @@
+#!/bin/bash
+
+CONFIG_FILE=/etc/ordvitsh/ordvitsh.conf
+
+if [ -r ${CONFIG_FILE} ]; then
+	source ${CONFIG_FILE}
+fi 
+
+if [ "${ORDVITSH_DATABASE}" == "" ]; then
+  ORDVITSH_DATABASE=default
+fi
+
+if [ "${ORDVITSH_DATABASE_DIR}" == "" ]; then
+  ORDVITSH_DATABASE_DIR=/usr/share/ordvitsh.d
+fi
+
+if [ "${NUMBER_OF_ORDVITSHES}" == "" ]; then
+  NUMBER_OF_ORDVITSHES=1
+fi
+
+while getopts "lf:n:" opt; do
+  case $opt in
+    l)
+      for f in $(find ${ORDVITSH_DATABASE_DIR} -maxdepth 1 -name "*.ordvitsh" | sort); do
+        echo "$(basename ${f%.*})"
+      done
+      exit 0
+      ;;
+    f)
+      ORDVITSH_DATABASE=${OPTARG}
+      ;;
+    n)
+      NUMBER_OF_ORDVITSHES=${OPTARG}
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done 
+
+shuf -n ${NUMBER_OF_ORDVITSHES} \
+      ${ORDVITSH_DATABASE_DIR}/${ORDVITSH_DATABASE}.ordvitsh
